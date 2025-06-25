@@ -1,3 +1,6 @@
+use std::time::SystemTime;
+
+use chrono::{DateTime, Local};
 use ratatui::symbols::bar::THREE_EIGHTHS;
 
 pub fn get_file_extension(filename: &str) -> Option<&str> {
@@ -84,4 +87,9 @@ pub fn truncate_string(s: &str, max_width: usize) -> String {
     } else {
         format!("{}...", &s[..max_width-3])
     }
+}
+
+pub fn format_time(time: SystemTime) -> String {
+    let date_time: DateTime<Local> = time.into();
+    date_time.format("%Y-%m-%d %H:%M").to_string()
 }

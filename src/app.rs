@@ -43,7 +43,7 @@ impl App {
             // Misc:
         };
 
-        app.refresh_file_list();
+        app.refresh_file_list()?;
 
         Ok(app)
     }
@@ -172,5 +172,9 @@ impl<T> StatefulList<T> {
 
     pub fn filtered_items(&self) -> Vec<&T> {
         self.filtered_items.iter().filter_map(|&i| self.items.get(i)).collect()
+    }
+
+    pub fn selected(&self) -> Option<&T> {
+        self.state.selected().and_then(|i| self.items.get(i))
     }
 }
