@@ -18,12 +18,20 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
 
 pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
     match key.code {
-        // Navigation:
+        // Navigation within current directory:
         KeyCode::Down => {
             app.file_list.next();
         }
         KeyCode::Up => {
             app.file_list.prev();
+        }
+
+        // Navigating into/out of directories:
+        KeyCode::Left => {
+            app.navigate_up()?;
+        }
+        KeyCode::Right | KeyCode::Enter => {
+            app.enter_selected()?;
         }
 
 

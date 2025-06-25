@@ -90,6 +90,40 @@ impl App {
 
         Ok(())
     }
+
+    pub fn clear_messages(&mut self) {
+        self.error_message = None;
+        self.status_message = None;
+    }
+
+    pub fn navigate_to(&mut self, path: PathBuf) -> Result<()> {
+        if path.is_dir() {
+            // todo: keep track of browsing history here?
+            self.current_path = path;
+            self.refresh_file_list()?;
+            self.clear_messages();
+        }
+        Ok(())
+    }
+
+    pub fn navigate_up(&mut self) -> Result<()> {
+        if let Some(parent) = self.current_path.parent() {
+            self.navigate_to(parent.to_path_buf())?;
+        }
+        Ok(())
+    }
+
+    pub fn enter_selected(&mut self) -> Result<()> {
+        if let Some(selected_item) = self.file_list.selected().cloned() {
+            if selected_item.is_dir {
+                self.navigate_to(selected_item.path)?;
+            } else {
+                // todo: open file with relevant application
+                // use system default app?
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
