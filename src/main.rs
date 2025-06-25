@@ -83,8 +83,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> 
                         if let Err(e) = handle_key_event(key_event, app) {
                             app.set_error(format!("Key Event Error: {}", e));
                         }
-                        // !temp exit on any key press
-                        app.should_exit = true;
                     }
                 }
                 Event::Mouse(mouse_event) => {

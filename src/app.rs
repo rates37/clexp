@@ -177,4 +177,36 @@ impl<T> StatefulList<T> {
     pub fn selected(&self) -> Option<&T> {
         self.state.selected().and_then(|i| self.items.get(i))
     }
+
+    pub fn next(&mut self) {
+        if self.filtered_items.is_empty() {
+            return;
+        }
+        let i = match self.state.selected() {
+            Some(i) => {
+                let current_idx = self.filtered_items.iter().position(|&x| x == i).unwrap_or(0);
+                self.filtered_items[(current_idx+1) % self.filtered_items.len()]
+            }
+            None => self.filtered_items[0],
+        };
+        self.state.select(Some(i));
+    }
+
+    pub fn prev(&mut self) {
+        if self.filtered_items.is_empty() {
+            return;
+        }
+        let i = match self.state.selected() {
+            Some(i) => {
+                let current_idx = self.filtered_items.iter().position(|&x| x == i).unwrap_or(0);
+                if current_idx == 0 {
+                    self.filtered_items[self.filtered_items.len()-1]
+                } else {
+                    self.filtered_items[current_idx - 1]
+                }
+            }
+            None => self.filtered_items[0],
+        };
+        self.state.select(Some(i));
+    }
 }
