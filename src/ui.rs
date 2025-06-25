@@ -5,7 +5,11 @@ use crate::{
     utils::{format_size, format_time, get_file_icon, truncate_string},
 };
 use ratatui::{
-    layout::{Constraint, Layout, Rect}, style::{Color, Modifier, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, List, ListItem, Padding, Paragraph, Wrap}, Frame
+    Frame,
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Clear, List, ListItem, Padding, Paragraph, Wrap},
 };
 
 pub fn draw(f: &mut Frame, app: &App) {
@@ -31,7 +35,7 @@ pub fn draw(f: &mut Frame, app: &App) {
     match app.mode {
         AppMode::Help => {
             draw_help_modal(f, app);
-        },
+        }
 
         _ => {}
     }
@@ -39,15 +43,18 @@ pub fn draw(f: &mut Frame, app: &App) {
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     let path_text = format!(" 🗂️ {}", app.current_path.display());
-    let mode_text = format!(" {} ", match app.mode {
-        AppMode::Normal => "NORMAL",
-        AppMode::Help => "HELP",
-        AppMode::MultiSelect => "SELECT",
-        AppMode::Input => "INPUT",
-        AppMode::Command => "COMMAND",
-        AppMode::Confirm => "CONFIRM",
-        AppMode::Clipboard => "CLIPBOARD",
-    });
+    let mode_text = format!(
+        " {} ",
+        match app.mode {
+            AppMode::Normal => "NORMAL",
+            AppMode::Help => "HELP",
+            AppMode::MultiSelect => "SELECT",
+            AppMode::Input => "INPUT",
+            AppMode::Command => "COMMAND",
+            AppMode::Confirm => "CONFIRM",
+            AppMode::Clipboard => "CLIPBOARD",
+        }
+    );
 
     // get area chunks for header:
     let header_chunks = Layout::default()
@@ -308,7 +315,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "Clexp Quick Help",
         // todo: "For more help, see documentation at XYZ"
         "",
-
         // Navigation:
         "Navigation:",
         "  ↑↓              Move selection",
@@ -321,7 +327,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  C               Show clipboard (not implemented yet)",
         "",
         "",
-
         // File operations (not done):
         "File operations: (not implemented yet)",
         "  r               Rename selected file/dir",
@@ -333,7 +338,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  N               New directory",
         "",
         "",
-
         // Modes (not implemented yet):
         "Modes: (not implemented yet)",
         "  s               Multi-Select Mode",
@@ -342,7 +346,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  [x]             Indicates selected files in Multi-Select Mode",
         "",
         "",
-
         // Mouse controls (not implemented yet)
         "Mouse Controls: (not implemented yet)",
         "  Click file      Select (or toggle in select mode)",
@@ -351,7 +354,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  Scroll wheel    Move selection up/down (or scroll modals)",
         "",
         "",
-
         // Commands:
         "Command Mode:",
         "  :q              Quit",
@@ -359,7 +361,6 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  :h or :help     Show this help",
         "",
         //todo allow user to create own commands? need to think about how to store commands between program instances
-
     ];
     let height = area.height.saturating_sub(2) as usize; // account for borders
     let max_offset = if help_dialog.len() > height {
@@ -368,41 +369,44 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         0
     };
     let offset = app.help_scroll_offset.min(max_offset);
-    let visible_lines = &help_dialog[offset..help_dialog.len().min(offset+height)];
+    let visible_lines = &help_dialog[offset..help_dialog.len().min(offset + height)];
     let help_text = visible_lines.join("\n");
 
     // todo: add a close button for mouse support eventually
 
-
     let paragraph = Paragraph::new(help_text)
-        .block(Block::default().borders(Borders::ALL).border_type(ratatui::widgets::BorderType::Rounded).title("Help Manual").padding(Padding {
-        left: 2,
-        right: 0,
-        top: 1,
-        bottom: 0,
-    }))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(ratatui::widgets::BorderType::Rounded)
+                .title(" Help Manual ")
+                .padding(Padding {
+                    left: 2,
+                    right: 0,
+                    top: 1,
+                    bottom: 0,
+                }),
+        )
         .wrap(Wrap { trim: true });
     f.render_widget(paragraph, area);
-
 }
-
 
 // UI-specific helper functions:
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
-            Constraint::Percentage((100-percent_y)/2),
+            Constraint::Percentage((100 - percent_y) / 2),
             Constraint::Percentage(percent_y),
-            Constraint::Percentage((100-percent_y)/2),
+            Constraint::Percentage((100 - percent_y) / 2),
         ])
         .split(r);
     Layout::default()
         .direction(ratatui::layout::Direction::Horizontal)
         .constraints([
-            Constraint::Percentage((100-percent_x)/2),
+            Constraint::Percentage((100 - percent_x) / 2),
             Constraint::Percentage(percent_x),
-            Constraint::Percentage((100-percent_x)/2),
+            Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
 }
