@@ -1,9 +1,6 @@
-use crate::app::App;
+use crate::{app::{App, AppMode}, utils::{format_size, get_file_icon, truncate_string}};
 use ratatui::{
-    Frame,
-    layout::{Constraint, Layout, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    layout::{Constraint, Layout, Rect}, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{Block, Borders, List, ListItem, Paragraph, Wrap}, Frame
 };
 
 pub fn draw(f: &mut Frame, app: &App) {
@@ -81,14 +78,75 @@ fn draw_main_content(f: &mut Frame, area: Rect, app: &App) {
 fn draw_files_list(f: &mut Frame, area: Rect, app: &App) {
     // pass
     // todo: remove / replace the following:
-    let paragraph = Paragraph::new("placeholder\nfiles go here")
-        .style(Style::default().fg(Color::White))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_type(ratatui::widgets::BorderType::Rounded),
-        );
-    f.render_widget(paragraph, area);
+    // let paragraph = Paragraph::new("placeholder\nfiles go here")
+    //     .style(Style::default().fg(Color::White))
+    //     .block(
+    //         Block::default()
+    //             .borders(Borders::ALL)
+    //             .border_type(ratatui::widgets::BorderType::Rounded),
+    //     );
+    // f.render_widget(paragraph, area);
+
+    let multi_select_mode = app.mode == AppMode::MultiSelect;
+    // todo more selection mode stuff
+    let selected_indices = &app.selection;
+    let items: Vec<ListItem> = app.file_list.filtered_items()
+        .iter()
+        .enumerate()
+        .map(|(idx, item)| {
+
+            let icon = get_file_icon(&item.name, item.is_dir);
+            let size_text = if let Some(size) = item.size {
+                format_size(size)
+            } else {
+                "-".to_string()
+            };
+            let name_width = if multi_select_mode {
+                area.width.saturating_sub(24) as usize // wider to display checkbox
+            } else {
+                area.width.saturating_sub(20) as usize
+            };
+
+            let display_name = truncate_string(&item.display_name(), name_width);
+            let is_selected = app.file_list.items
+                .iter()
+                .position(|f| f.name == item.name && f.path == item.path)
+                .map_or(false, |i| selected_indices.contains(&i));
+            let checkbox = if multi_select_mode {
+                if is_selected { "[x]"} else {"[ ]"}
+               
+            } else { "" };
+
+            let content = if multi_select_mode {
+                format!("{} {} {:<width$} {:>8}", checkbox, icon, display_name, size_text, width=name_width)
+            }else {
+                format!("{} {:<width$} {:>8}", icon, display_name, size_text, width=name_width)
+            };
+
+            let mut style = if item.is_dir {
+                Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default()
+            };
+            if multi_select_mode && is_selected {
+                style = style.bg(Color::Yellow).fg(Color::Black);
+            }
+            ListItem::new(Line::from(Span::styled(content, style)))
+        }).collect();
+
+        let title = if multi_select_mode {  // todo: fix this when filtering is applied (not implemented yet)
+            format!(" Files ({}) [{} items selected]", app.file_list.items.len(), app.selection.len())
+        } else {
+            format!(" Files ({}) ", app.file_list.items.len())
+        };
+
+        let list = List::new(items)
+            .block(Block::default().borders(Borders::ALL).border_type(ratatui::widgets::BorderType::Rounded).title(title))
+            .highlight_style(Style::default().bg(Color::Gray).add_modifier(Modifier::BOLD))
+            .highlight_symbol("→ ");
+
+        f.render_stateful_widget(list, area, &mut app.file_list.state.clone());
+
 }
 
 fn draw_info_panel(f: &mut Frame, area: Rect, app: &App) {

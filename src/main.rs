@@ -19,6 +19,7 @@ use ratatui::{
 mod app;
 mod ui;
 mod event_handler;
+mod utils;
 
 use app::App;
 

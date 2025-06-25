@@ -1,17 +1,11 @@
 use anyhow::Result;
 use color_eyre::owo_colors::colors::Magenta;
-use std::{fs::DirEntry, path::PathBuf, vec};
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum AppMode {
-    Normal,      // default mode
-    MultiSelect, // when selecting multiple files
-    Input,       // For when giving input to rename, create, search, etc
-    Confirm, // For when prompting the user to confirm a decision (for dangerous actions like deletion)
-    Command, // When user entering a command
-    Help,    // When app is showing help modal
-    Clipboard, // When app is showing the contents of the clipboard
-}
+use ratatui::widgets::ListState;
+use std::{
+    fs::{self, DirEntry},
+    path::PathBuf,
+    vec,
+};
 
 pub struct App {
     // Core state:
@@ -20,11 +14,14 @@ pub struct App {
 
     // Backend State:
     pub current_path: PathBuf,
-    pub file_list: Vec<String>,
+    pub file_list: StatefulList<FileItem>,
 
     // UI State:
     pub error_message: Option<String>,
-    pub status_message: Option<String>, // Misc:
+    pub status_message: Option<String>, 
+    pub selection: Vec<usize>,
+
+    // Misc:
 }
 
 impl App {
@@ -37,13 +34,16 @@ impl App {
 
             // Backend State:
             current_path: current_path,
-            file_list: vec![],
+            file_list: StatefulList::new(),
 
             // UI State:
             error_message: Some("Error".to_string()),
             status_message: None,
+            selection: Vec::new(),
             // Misc:
         };
+
+        app.refresh_file_list();
 
         Ok(app)
     }
@@ -51,6 +51,56 @@ impl App {
     pub fn set_error(&mut self, message: String) {
         self.error_message = Some(message);
     }
+
+    pub fn refresh_file_list(&mut self) -> Result<()> {
+        let mut entries = fs::read_dir(&self.current_path)?
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| FileItem::from_dir_entry(entry).ok())
+            .collect::<Vec<_>>();
+
+        // sort entries:
+        entries.sort_by(|a, b| {
+            match (a.is_dir, b.is_dir) {
+                // all folders appear before files
+                (true, false) => std::cmp::Ordering::Less,
+                (false, true) => std::cmp::Ordering::Greater,
+                _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+            }
+        });
+
+        // check if root, if not, add parent directory to top of list:
+        if let Some(parent) = self.current_path.parent() {
+            entries.insert(
+                0,
+                FileItem {
+                    name: "..".to_string(),
+                    path: parent.to_path_buf(),
+                    is_dir: true,
+                    size: None,
+                    modified: None,
+                },
+            );
+        }
+
+        // update self
+        self.file_list = StatefulList::new_with_items(entries);
+
+        // todo: apply filtering
+
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AppMode {
+    Normal,      // default mode
+    MultiSelect, // when selecting multiple files
+    Input,       // For when giving input to rename, create, search, etc
+    Confirm, // For when prompting the user to confirm a decision (for dangerous actions like deletion)
+    Command, // When user entering a command
+    Help,    // When app is showing help modal
+    Clipboard, // When app is showing the contents of the clipboard
 }
 
 // File items:
@@ -91,5 +141,36 @@ impl FileItem {
             },
             modified: metadata.modified().ok(),
         })
+    }
+}
+
+// Stateful List:
+#[derive(Debug, Clone)]
+pub struct StatefulList<T> {
+    pub state: ListState,
+    pub items: Vec<T>,
+    pub filtered_items: Vec<usize>, // indices of selected items
+}
+
+impl<T> StatefulList<T> {
+    pub fn new() -> Self {
+        Self {
+            state: ListState::default(),
+            items: Vec::new(),
+            filtered_items: Vec::new(),
+        }
+    }
+
+    pub fn new_with_items(items: Vec<T>) -> Self {
+        let selected = (0..items.len()).collect();
+        Self {
+            state: ListState::default(),
+            items: items,
+            filtered_items: selected,
+        }
+    }
+
+    pub fn filtered_items(&self) -> Vec<&T> {
+        self.filtered_items.iter().filter_map(|&i| self.items.get(i)).collect()
     }
 }
