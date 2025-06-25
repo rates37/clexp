@@ -130,6 +130,23 @@ impl App {
         }
         Ok(())
     }
+
+    pub fn scroll_help_down(&mut self, content_length: usize, viewport_height: usize) {
+        let max_scroll = if content_length > viewport_height {
+            content_length - viewport_height
+        } else {
+            0
+        };
+        if self.help_scroll_offset < max_scroll {
+            self.help_scroll_offset += 1;
+        }
+    }
+
+    pub fn scroll_help_up(&mut self) {
+        if self.help_scroll_offset > 0 {
+            self.help_scroll_offset -= 1;
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

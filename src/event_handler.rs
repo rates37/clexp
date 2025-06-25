@@ -1,7 +1,7 @@
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 use anyhow::Result;
-use crate::app::{App, AppMode};
+use crate::{app::{App, AppMode}, ui::HELP_DIALOG};
 
 
 // !---------------------
@@ -65,6 +65,23 @@ pub fn handle_key_event_help(key: KeyEvent, app: &mut App) -> Result<()> {
         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.should_exit = true;
         }
+
+        // Scroll down:
+        KeyCode::Down => {
+            let content_length = HELP_DIALOG.len();
+            if let Ok((_, terminal_height)) = crossterm::terminal::size() {
+                let modal_height = (terminal_height as f32 * 0.8) as usize;
+                let viewport_height = modal_height.saturating_sub(2); // account for borders
+                app.scroll_help_down(content_length, viewport_height);
+            }
+        }
+
+        // Scroll up:
+        KeyCode::Up => {
+            app.scroll_help_up();
+        }
+
+
         _ => {}
 
     }
