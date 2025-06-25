@@ -1,13 +1,11 @@
+use std::cmp::min;
+
 use crate::{
     app::{App, AppMode},
     utils::{format_size, format_time, get_file_icon, truncate_string},
 };
 use ratatui::{
-    Frame,
-    layout::{Constraint, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    layout::{Constraint, Layout, Rect}, style::{Color, Modifier, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, List, ListItem, Padding, Paragraph, Wrap}, Frame
 };
 
 pub fn draw(f: &mut Frame, app: &App) {
@@ -28,6 +26,15 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     // Draw status bar:
     draw_status_bar(f, chunks[2], app);
+
+    // Draw additional dialog, modals, etc:
+    match app.mode {
+        AppMode::Help => {
+            draw_help_modal(f, app);
+        },
+
+        _ => {}
+    }
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
@@ -179,16 +186,6 @@ fn draw_files_list(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_info_panel(f: &mut Frame, area: Rect, app: &App) {
-    // // pass
-    // // todo: remove / replace the following:
-    // let paragraph = Paragraph::new("placeholder\ninfo about currently selected\nfile goes here")
-    //     .style(Style::default().fg(Color::White))
-    //     .block(
-    //         Block::default()
-    //             .borders(Borders::ALL)
-    //             .border_type(ratatui::widgets::BorderType::Rounded),
-    //     );
-    // f.render_widget(paragraph, area);
     let content = if let Some(selected_item) = app.file_list.selected() {
         let mut lines = vec![
             Line::from(vec![
@@ -283,4 +280,113 @@ fn draw_status_bar(f: &mut Frame, area: Rect, app: &App) {
                 .border_type(ratatui::widgets::BorderType::Rounded),
         );
     f.render_widget(hints_paragraph, status_bar_chunks[1]);
+}
+
+fn draw_help_modal(f: &mut Frame, app: &App) {
+    // show a clear rectangle
+    let area = centered_rect(80, 80, f.size());
+    f.render_widget(Clear, area);
+
+    // note to self the spaces here are aesthetic
+    let help_dialog = [
+        "Clexp Quick Help",
+        // todo: "For more help, see documentation at XYZ"
+        "",
+
+        // Navigation:
+        "Navigation:",
+        "  ↑↓              Move selection",
+        "  ←               Up one directory",
+        "  →, Enter        Enter Directory/Open File",
+        "  q, Ctrl+C       Quit",
+        "  /               Filter files",
+        "  :               Enter command",
+        "  ?, :help      Show this help",
+        "  C               Show clipboard (not implemented yet)",
+        "",
+        "",
+
+        // File operations (not done):
+        "File operations: (not implemented yet)",
+        "  r               Rename selected file/dir",
+        "  d               Delete selected file(s)/dir(s)",
+        "  x               Cut selected file(s)/dir(s)",
+        "  c               Copy selected file(s)/dir(s)",
+        "  v               Paste selected file(s)/dir(s)",
+        "  n               New file",
+        "  N               New directory",
+        "",
+        "",
+
+        // Modes (not implemented yet):
+        "Modes: (not implemented yet)",
+        "  s               Multi-Select Mode",
+        "  Space           Toggle selection in Multi-Select Mode",
+        "  Esc, s          Exit Multi-Select Mode",
+        "  [x]             Indicates selected files in Multi-Select Mode",
+        "",
+        "",
+
+        // Mouse controls (not implemented yet)
+        "Mouse Controls: (not implemented yet)",
+        "  Click file      Select (or toggle in select mode)",
+        "  Click folder    Select / Open directory (toggles in select mode)",
+        "  Click ..        Go up a directory",
+        "  Scroll wheel    Move selection up/down (or scroll modals)",
+        "",
+        "",
+
+        // Commands:
+        "Command Mode:",
+        "  :q              Quit",
+        "  :s <term>       Filter View",
+        "  :h or :help     Show this help",
+        "",
+        //todo allow user to create own commands? need to think about how to store commands between program instances
+
+    ];
+    let height = area.height.saturating_sub(2) as usize; // account for borders
+    let max_offset = if help_dialog.len() > height {
+        help_dialog.len() - height
+    } else {
+        0
+    };
+    let offset = app.help_scroll_offset.min(max_offset);
+    let visible_lines = &help_dialog[offset..help_dialog.len().min(offset+height)];
+    let help_text = visible_lines.join("\n");
+
+    // todo: add a close button for mouse support eventually
+
+
+    let paragraph = Paragraph::new(help_text)
+        .block(Block::default().borders(Borders::ALL).border_type(ratatui::widgets::BorderType::Rounded).title("Help").padding(Padding {
+        left: 2,
+        right: 0,
+        top: 1,
+        bottom: 0,
+    }))
+        .wrap(Wrap { trim: true });
+    f.render_widget(paragraph, area);
+
+}
+
+
+// UI-specific helper functions:
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100-percent_y)/2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100-percent_y)/2),
+        ])
+        .split(r);
+    Layout::default()
+        .direction(ratatui::layout::Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100-percent_x)/2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100-percent_x)/2),
+        ])
+        .split(popup_layout[1])[1]
 }

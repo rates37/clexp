@@ -21,6 +21,9 @@ pub struct App {
     pub status_message: Option<String>, 
     pub selection: Vec<usize>,
 
+    // help UI:
+    pub help_scroll_offset: usize,
+
     // Misc:
 }
 
@@ -40,6 +43,9 @@ impl App {
             error_message: Some("Error".to_string()),
             status_message: None,
             selection: Vec::new(),
+
+            // help UI:
+            help_scroll_offset: 0,
             // Misc:
         };
 

@@ -1,5 +1,5 @@
 
-use crossterm::event::{KeyCode, KeyEvent, MouseEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 use anyhow::Result;
 use crate::app::{App, AppMode};
 
@@ -11,6 +11,7 @@ use crate::app::{App, AppMode};
 pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
     match app.mode {
         AppMode::Normal => handle_key_event_normal(key, app),
+        AppMode::Help => handle_key_event_help(key, app),
         // todo: implement other modes
         _ => Ok(())
     }
@@ -34,14 +35,39 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
             app.enter_selected()?;
         }
 
+        // Display help:
+        KeyCode::Char('?') => {
+            app.mode = AppMode::Help;
+        }
+
 
         // Quit:
         KeyCode::Char('q') => {
             app.should_exit = true;
         }
+        // allow ctrl+C to exit application too:
+        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.should_exit = true;
+        }
         _ => {}
     }
 
+    Ok(())
+}
+
+pub fn handle_key_event_help(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        // Quit:
+        KeyCode::Char('q') | KeyCode::Esc => {
+            app.mode = AppMode::Normal;
+        }
+        // allow ctrl+C to exit application too:
+        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.should_exit = true;
+        }
+        _ => {}
+
+    }
     Ok(())
 }
 
