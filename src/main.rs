@@ -20,6 +20,7 @@ mod app;
 mod ui;
 mod event_handler;
 mod utils;
+mod commands;
 
 use app::App;
 

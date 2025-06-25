@@ -1,7 +1,7 @@
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 use anyhow::Result;
-use crate::{app::{App, AppMode}, ui::HELP_DIALOG};
+use crate::{app::{App, AppMode, InputContext}, commands::{Command, RenameCommand}, ui::HELP_DIALOG};
 
 
 // !---------------------
@@ -12,6 +12,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
     match app.mode {
         AppMode::Normal => handle_key_event_normal(key, app),
         AppMode::Help => handle_key_event_help(key, app),
+        AppMode::Input => handle_key_event_input(key, app),
         // todo: implement other modes
         _ => Ok(())
     }
@@ -49,6 +50,20 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.should_exit = true;
         }
+
+
+        // Quick actions:
+        KeyCode::Char('r') => {
+            if let Some(selected) = app.file_list.selected() {
+                app.mode = AppMode::Input;
+                app.input_buffer.clear();
+                app.input_buffer.push_str(&selected.name);
+                app.cursor_position = selected.name.len(); // position cursor at the end
+                app.input_context = Some(InputContext::Rename);
+                app.set_status("Rename to: ".to_string());
+                
+            }
+        }
         _ => {}
     }
 
@@ -82,12 +97,81 @@ pub fn handle_key_event_help(key: KeyEvent, app: &mut App) -> Result<()> {
         }
 
 
+
+
         _ => {}
 
     }
     Ok(())
 }
 
+
+pub fn handle_key_event_input(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        KeyCode::Enter => {
+            // handle execution based on input context
+            if !app.input_buffer.is_empty() {
+                let input_text = app.input_buffer.clone();
+                match app.input_context {
+                    Some(InputContext::Rename) => {
+                        if let Some(selected) = app.file_list.selected() {
+                            let mut rename_command = RenameCommand::new(selected.path.clone(), input_text);
+                            if let Err(e) = rename_command.execute(app) {
+                                app.set_error(format!("Rename failed: {}", e));
+                            } else {
+                                if let Err(e) = app.refresh_file_list() {
+                                    app.set_error(format!("Failed to refresh after rename: {}", e));
+                                }
+                            }
+                        }
+                    }
+                    //todo: implement the rest of the commands:
+
+                    _ => {}
+                }
+                app.mode = AppMode::Normal;
+                app.input_context = None;
+                app.clear_input_buffer();
+            }
+        }
+
+        KeyCode::Esc => {
+            app.mode = AppMode::Normal;
+            app.input_context = None;
+            app.clear_input_buffer();
+        }
+
+        // Cursor movement:
+        KeyCode::Left => {
+            app.move_cursor_left();
+        }
+        KeyCode::Right => {
+            app.move_cursor_right();
+        }
+        KeyCode::Up | KeyCode::Home => {
+            app.move_cursor_home();
+        }
+        KeyCode::Down | KeyCode::End => {
+            app.move_cursor_end();
+        }
+
+        // Text editing:
+        KeyCode::Backspace => {
+            app.delete_char_before_cursor();
+        }
+        KeyCode::Delete => {
+            app.delete_char_at_cursor();
+        }
+        // Text input:
+        KeyCode::Char(c) => {
+            app.insert_char_at_cursor(c);
+        }
+
+        _ => {}
+    }
+
+    Ok(())
+}
 // !---------------------
 // ! Handle Mouse Events:
 // !---------------------

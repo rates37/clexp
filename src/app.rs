@@ -24,6 +24,11 @@ pub struct App {
     // help UI:
     pub help_scroll_offset: usize,
 
+    // Input handling:
+    pub input_buffer: String,
+    pub cursor_position: usize,
+    pub input_context: Option<InputContext>
+
     // Misc:
 }
 
@@ -46,6 +51,11 @@ impl App {
 
             // help UI:
             help_scroll_offset: 0,
+
+            // Input handling:
+            input_buffer: String::new(),
+            cursor_position: 0,
+            input_context: None,
             // Misc:
         };
 
@@ -146,6 +156,57 @@ impl App {
         if self.help_scroll_offset > 0 {
             self.help_scroll_offset -= 1;
         }
+    }
+
+    pub fn set_status(&mut self, message: String) {
+        self.status_message = Some(message);
+    }
+
+    pub fn clear_input_buffer(&mut self) {
+        self.input_buffer.clear();
+        self.cursor_position = 0;
+    }
+
+    pub fn move_cursor_left(&mut self) {
+        if self.cursor_position > 0 {
+            self.cursor_position -= 1;
+        }
+    }
+
+    pub fn move_cursor_right(&mut self) {
+        if self.cursor_position < self.input_buffer.len() {
+            self.cursor_position += 1;
+        }
+    }
+
+    pub fn move_cursor_home(&mut self) {
+        self.cursor_position = 0;
+    }
+
+    pub fn move_cursor_end(&mut self) {
+        self.cursor_position = self.input_buffer.len();
+    }
+
+    pub fn delete_char_before_cursor(&mut self) -> Option<char> {
+        if self.cursor_position > 0 {
+            self.cursor_position -= 1;
+            Some(self.input_buffer.remove(self.cursor_position))
+        } else {
+            None
+        }
+    }
+
+    pub fn delete_char_at_cursor(&mut self) -> Option<char> {
+        if self.cursor_position < self.input_buffer.len() {
+            Some(self.input_buffer.remove(self.cursor_position))
+        } else {
+            None
+        }
+    }
+
+    pub fn insert_char_at_cursor(&mut self, c: char) {
+        self.input_buffer.insert(self.cursor_position, c);
+        self.cursor_position += 1;
     }
 }
 
@@ -266,4 +327,14 @@ impl<T> StatefulList<T> {
         };
         self.state.select(Some(i));
     }
+}
+
+// Input context:
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputContext {
+    Rename,
+    CreateFile,
+    CreateDir,
+    Filter,
+    Command,
 }

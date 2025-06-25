@@ -1,7 +1,7 @@
 use std::cmp::min;
 
 use crate::{
-    app::{App, AppMode},
+    app::{App, AppMode, InputContext},
     utils::{format_size, format_time, get_file_icon, truncate_string},
 };
 use ratatui::{
@@ -35,6 +35,9 @@ pub fn draw(f: &mut Frame, app: &App) {
     match app.mode {
         AppMode::Help => {
             draw_help_modal(f, app);
+        }
+        AppMode::Input => {
+            draw_input_modal(f, app);
         }
 
         _ => {}
@@ -339,6 +342,36 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
     f.render_widget(paragraph, area);
 }
 
+fn draw_input_modal(f: &mut Frame, app: &App) {
+    let area = centered_rect(60, 20, f.size());
+    f.render_widget(Clear, area);
+
+    // determine the title based on input context:
+    let title = match app.input_context {
+        Some(InputContext::Rename) => "Rename File/Directory",
+        Some(InputContext::CreateFile) => "Create New File",
+        Some(InputContext::CreateDir) => "Create New Directory",
+        Some(InputContext::Filter) => "Filter Files",
+        Some(InputContext::Command) => "Command Mode",
+        None => "Input",
+    };
+
+    let input_text = &app.input_buffer;
+    let cursor_pos = app.cursor_position;
+    let before_cursor = &input_text[..cursor_pos.min(input_text.len())];
+    let after_cursor = &input_text[cursor_pos.min(input_text.len())..];
+    let text_with_cursor = format!("{}█{}", before_cursor, after_cursor);
+    let paragraph = Paragraph::new(text_with_cursor)
+        .style(Style::default().fg(Color::Yellow))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(ratatui::widgets::BorderType::Rounded)
+                .title(title),
+        );
+    f.render_widget(paragraph, area);
+}
+
 // UI-specific helper functions:
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
@@ -359,55 +392,54 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-
 pub static HELP_DIALOG: [&str; 42] = [
-        "Clexp Quick Help",
-        // todo: "For more help, see documentation at XYZ"
-        "",
-        // Navigation:
-        "Navigation:",
-        "  ↑↓              Move selection",
-        "  ←               Up one directory",
-        "  →, Enter        Enter Directory/Open File",
-        "  q, Ctrl+C       Quit",
-        "  /               Filter files",
-        "  :               Enter command",
-        "  ?, :help        Show this help",
-        "  C               Show clipboard (not implemented yet)",
-        "",
-        "",
-        // File operations (not done):
-        "File operations: (not implemented yet)",
-        "  r               Rename selected file/dir",
-        "  d               Delete selected file(s)/dir(s)",
-        "  x               Cut selected file(s)/dir(s)",
-        "  c               Copy selected file(s)/dir(s)",
-        "  v               Paste selected file(s)/dir(s)",
-        "  n               New file",
-        "  N               New directory",
-        "",
-        "",
-        // Modes (not implemented yet):
-        "Modes: (not implemented yet)",
-        "  s               Multi-Select Mode",
-        "  Space           Toggle selection in Multi-Select Mode",
-        "  Esc, s          Exit Multi-Select Mode",
-        "  [x]             Indicates selected files in Multi-Select Mode",
-        "",
-        "",
-        // Mouse controls (not implemented yet)
-        "Mouse Controls: (not implemented yet)",
-        "  Click file      Select (or toggle in select mode)",
-        "  Click folder    Select / Open directory (toggles in select mode)",
-        "  Click ..        Go up a directory",
-        "  Scroll wheel    Move selection up/down (or scroll modals)",
-        "",
-        "",
-        // Commands:
-        "Command Mode:",
-        "  :q              Quit",
-        "  :s <term>       Filter View",
-        "  :h or :help     Show this help",
-        "",
-        //todo allow user to create own commands? need to think about how to store commands between program instances
-    ];
+    "Clexp Quick Help",
+    // todo: "For more help, see documentation at XYZ"
+    "",
+    // Navigation:
+    "Navigation:",
+    "  ↑↓              Move selection",
+    "  ←               Up one directory",
+    "  →, Enter        Enter Directory/Open File",
+    "  q, Ctrl+C       Quit",
+    "  /               Filter files",
+    "  :               Enter command",
+    "  ?, :help        Show this help",
+    "  C               Show clipboard (not implemented yet)",
+    "",
+    "",
+    // File operations (not done):
+    "File operations: (not implemented yet)",
+    "  r               Rename selected file/dir",
+    "  d               Delete selected file(s)/dir(s)",
+    "  x               Cut selected file(s)/dir(s)",
+    "  c               Copy selected file(s)/dir(s)",
+    "  v               Paste selected file(s)/dir(s)",
+    "  n               New file",
+    "  N               New directory",
+    "",
+    "",
+    // Modes (not implemented yet):
+    "Modes: (not implemented yet)",
+    "  s               Multi-Select Mode",
+    "  Space           Toggle selection in Multi-Select Mode",
+    "  Esc, s          Exit Multi-Select Mode",
+    "  [x]             Indicates selected files in Multi-Select Mode",
+    "",
+    "",
+    // Mouse controls (not implemented yet)
+    "Mouse Controls: (not implemented yet)",
+    "  Click file      Select (or toggle in select mode)",
+    "  Click folder    Select / Open directory (toggles in select mode)",
+    "  Click ..        Go up a directory",
+    "  Scroll wheel    Move selection up/down (or scroll modals)",
+    "",
+    "",
+    // Commands:
+    "Command Mode:",
+    "  :q              Quit",
+    "  :s <term>       Filter View",
+    "  :h or :help     Show this help",
+    "",
+    //todo allow user to create own commands? need to think about how to store commands between program instances
+];
