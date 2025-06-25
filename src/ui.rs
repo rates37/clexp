@@ -39,7 +39,15 @@ pub fn draw(f: &mut Frame, app: &App) {
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     let path_text = format!(" 🗂️ {}", app.current_path.display());
-    let mode_text = format!(" {} ", "NORMAL"); // todo: display different app modes
+    let mode_text = format!(" {} ", match app.mode {
+        AppMode::Normal => "NORMAL",
+        AppMode::Help => "HELP",
+        AppMode::MultiSelect => "SELECT",
+        AppMode::Input => "INPUT",
+        AppMode::Command => "COMMAND",
+        AppMode::Confirm => "CONFIRM",
+        AppMode::Clipboard => "CLIPBOARD",
+    });
 
     // get area chunks for header:
     let header_chunks = Layout::default()
@@ -63,7 +71,15 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 
     // todo: idea: highlight mode box with colours?
     // for now leave default:
-    let mode_style = Style::default().fg(Color::Green);
+    let mode_style = match app.mode {
+        AppMode::Normal => Style::default().fg(Color::Green),
+        AppMode::Help => Style::default().fg(Color::Magenta),
+        AppMode::MultiSelect => Style::default().fg(Color::Yellow),
+        AppMode::Input => Style::default().fg(Color::Blue),
+        AppMode::Command => Style::default().fg(Color::Cyan),
+        AppMode::Confirm => Style::default().fg(Color::Red),
+        AppMode::Clipboard => Style::default().fg(Color::LightGreen),
+    };
 
     let mode_paragraph = Paragraph::new(mode_text)
         .style(mode_style.add_modifier(Modifier::BOLD))
@@ -301,7 +317,7 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
         "  q, Ctrl+C       Quit",
         "  /               Filter files",
         "  :               Enter command",
-        "  ?, :help      Show this help",
+        "  ?, :help        Show this help",
         "  C               Show clipboard (not implemented yet)",
         "",
         "",
@@ -359,7 +375,7 @@ fn draw_help_modal(f: &mut Frame, app: &App) {
 
 
     let paragraph = Paragraph::new(help_text)
-        .block(Block::default().borders(Borders::ALL).border_type(ratatui::widgets::BorderType::Rounded).title("Help").padding(Padding {
+        .block(Block::default().borders(Borders::ALL).border_type(ratatui::widgets::BorderType::Rounded).title("Help Manual").padding(Padding {
         left: 2,
         right: 0,
         top: 1,
