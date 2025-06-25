@@ -40,7 +40,7 @@ impl App {
             file_list: vec![],
 
             // UI State:
-            error_message: Some("Fuck".to_string()),
+            error_message: Some("Error".to_string()),
             status_message: None,
             // Misc:
         };
