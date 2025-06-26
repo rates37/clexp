@@ -1,8 +1,10 @@
-
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
+use crate::{
+    app::{App, AppMode, InputContext},
+    commands::{Command, CreateFileCommand, RenameCommand, create::CreateDirCommand},
+    ui::HELP_DIALOG,
+};
 use anyhow::Result;
-use crate::{app::{App, AppMode, InputContext}, commands::{Command, CreateFileCommand, RenameCommand}, ui::HELP_DIALOG};
-
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 
 // !---------------------
 // !  Handle Key Events:
@@ -14,7 +16,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
         AppMode::Help => handle_key_event_help(key, app),
         AppMode::Input => handle_key_event_input(key, app),
         // todo: implement other modes
-        _ => Ok(())
+        _ => Ok(()),
     }
 }
 
@@ -62,8 +64,6 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
             app.set_status("Create new directory: ".to_string());
         }
 
-
-
         // Quit:
         KeyCode::Char('q') => {
             app.should_exit = true;
@@ -72,7 +72,6 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
             app.should_exit = true;
         }
-
 
         // Quick actions:
         KeyCode::Char('r') => {
@@ -117,15 +116,10 @@ pub fn handle_key_event_help(key: KeyEvent, app: &mut App) -> Result<()> {
             app.scroll_help_up();
         }
 
-
-
-
         _ => {}
-
     }
     Ok(())
 }
-
 
 pub fn handle_key_event_input(key: KeyEvent, app: &mut App) -> Result<()> {
     match key.code {
@@ -137,7 +131,8 @@ pub fn handle_key_event_input(key: KeyEvent, app: &mut App) -> Result<()> {
                     // rename:
                     Some(InputContext::Rename) => {
                         if let Some(selected) = app.file_list.selected() {
-                            let mut rename_command = RenameCommand::new(selected.path.clone(), input_text);
+                            let mut rename_command =
+                                RenameCommand::new(selected.path.clone(), input_text);
                             if let Err(e) = rename_command.execute(app) {
                                 app.set_error(format!("Rename failed: {}", e));
                             } else {
@@ -159,10 +154,13 @@ pub fn handle_key_event_input(key: KeyEvent, app: &mut App) -> Result<()> {
 
                     // create directory:
                     Some(InputContext::CreateDir) => {
-
+                        let new_dir_path = app.current_path.join(&input_text);
+                        let mut create_command = CreateDirCommand::new(new_dir_path);
+                        if let Err(e) = create_command.execute(app) {
+                            app.set_error(format!("Directory creation failed: {}", e));
+                        }
                     }
                     //todo: implement the rest of the commands:
-
                     _ => {}
                 }
                 app.mode = AppMode::Normal;

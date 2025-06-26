@@ -61,3 +61,49 @@ impl Command for CreateFileCommand {
         Ok(())
     }
 }
+
+#[derive(Debug)]
+pub struct CreateDirCommand {
+    path: PathBuf,
+    created: bool,
+}
+
+impl CreateDirCommand {
+    pub fn new(path: PathBuf) -> Self {
+        Self {
+            path,
+            created: false,
+        }
+    }
+}
+
+impl Command for CreateDirCommand {
+    fn execute(&mut self, app: &mut App) -> anyhow::Result<()> {
+        // create directory:
+        std::fs::create_dir_all(&self.path)?;
+        self.created = true;
+
+        // update display:
+        app.refresh_file_list()?;
+        app.set_status(format!("Created directory: {}", self.path.display()));
+
+        Ok(())
+    }
+
+    fn description(&self) -> String {
+        format!("Create directory: '{}'", self.path.display())
+    }
+
+    fn undo(&mut self, app: &mut App) -> anyhow::Result<()> {
+        if self.created {
+            // remove the directory:
+            std::fs::remove_dir(&self.path)?;
+
+            // update display:
+            app.refresh_file_list()?;
+            app.set_status(format!("Removed directory: '{}'", self.path.display()));
+        }
+
+        Ok(())
+    }
+}
