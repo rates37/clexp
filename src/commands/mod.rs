@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::app::App;
+use anyhow::Result;
 
 /// Command trait defines the interface for all file operations
 pub trait Command: std::fmt::Debug {
@@ -17,3 +17,6 @@ pub trait Command: std::fmt::Debug {
 
 pub mod rename;
 pub use rename::RenameCommand;
+
+pub mod create;
+pub use create::CreateFileCommand;
