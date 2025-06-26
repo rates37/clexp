@@ -7,6 +7,8 @@ use std::{
     vec,
 };
 
+use crate::commands::Command;
+
 pub struct App {
     // Core state:
     pub should_exit: bool,
@@ -18,7 +20,7 @@ pub struct App {
 
     // UI State:
     pub error_message: Option<String>,
-    pub status_message: Option<String>, 
+    pub status_message: Option<String>,
     pub selection: Vec<usize>,
 
     // help UI:
@@ -27,9 +29,10 @@ pub struct App {
     // Input handling:
     pub input_buffer: String,
     pub cursor_position: usize,
-    pub input_context: Option<InputContext>
+    pub input_context: Option<InputContext>,
 
-    // Misc:
+    // Operation State:
+    pub active_command: Option<Box<dyn Command>>,
 }
 
 impl App {
@@ -45,7 +48,7 @@ impl App {
             file_list: StatefulList::new(),
 
             // UI State:
-            error_message: Some("Error".to_string()),
+            error_message: None,
             status_message: None,
             selection: Vec::new(),
 
@@ -56,7 +59,9 @@ impl App {
             input_buffer: String::new(),
             cursor_position: 0,
             input_context: None,
-            // Misc:
+
+            // Operation State:
+            active_command: None,
         };
 
         app.refresh_file_list()?;
@@ -102,7 +107,6 @@ impl App {
         self.file_list = StatefulList::new_with_items(entries);
 
         // todo: apply filtering
-
 
         Ok(())
     }
@@ -289,7 +293,10 @@ impl<T> StatefulList<T> {
     }
 
     pub fn filtered_items(&self) -> Vec<&T> {
-        self.filtered_items.iter().filter_map(|&i| self.items.get(i)).collect()
+        self.filtered_items
+            .iter()
+            .filter_map(|&i| self.items.get(i))
+            .collect()
     }
 
     pub fn selected(&self) -> Option<&T> {
@@ -302,8 +309,12 @@ impl<T> StatefulList<T> {
         }
         let i = match self.state.selected() {
             Some(i) => {
-                let current_idx = self.filtered_items.iter().position(|&x| x == i).unwrap_or(0);
-                self.filtered_items[(current_idx+1) % self.filtered_items.len()]
+                let current_idx = self
+                    .filtered_items
+                    .iter()
+                    .position(|&x| x == i)
+                    .unwrap_or(0);
+                self.filtered_items[(current_idx + 1) % self.filtered_items.len()]
             }
             None => self.filtered_items[0],
         };
@@ -316,9 +327,13 @@ impl<T> StatefulList<T> {
         }
         let i = match self.state.selected() {
             Some(i) => {
-                let current_idx = self.filtered_items.iter().position(|&x| x == i).unwrap_or(0);
+                let current_idx = self
+                    .filtered_items
+                    .iter()
+                    .position(|&x| x == i)
+                    .unwrap_or(0);
                 if current_idx == 0 {
-                    self.filtered_items[self.filtered_items.len()-1]
+                    self.filtered_items[self.filtered_items.len() - 1]
                 } else {
                     self.filtered_items[current_idx - 1]
                 }

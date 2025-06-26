@@ -19,4 +19,7 @@ pub mod rename;
 pub use rename::RenameCommand;
 
 pub mod create;
-pub use create::CreateFileCommand;
+pub use create::{CreateDirCommand, CreateFileCommand};
+
+pub mod delete;
+pub use delete::DeleteCommand;

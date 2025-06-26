@@ -1,6 +1,8 @@
 use crate::{
     app::{App, AppMode, InputContext},
-    commands::{Command, CreateFileCommand, RenameCommand, create::CreateDirCommand},
+    commands::{
+        Command, CreateFileCommand, RenameCommand, create::CreateDirCommand, delete::DeleteCommand,
+    },
     ui::HELP_DIALOG,
 };
 use anyhow::Result;
@@ -15,6 +17,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
         AppMode::Normal => handle_key_event_normal(key, app),
         AppMode::Help => handle_key_event_help(key, app),
         AppMode::Input => handle_key_event_input(key, app),
+        AppMode::Confirm => handle_key_event_confirm(key, app),
         // todo: implement other modes
         _ => Ok(()),
     }
@@ -82,6 +85,16 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
                 app.cursor_position = selected.name.len(); // position cursor at the end
                 app.input_context = Some(InputContext::Rename);
                 app.set_status("Rename to: ".to_string());
+            }
+        }
+
+        KeyCode::Char('d') => {
+            if let Some(selected) = app.file_list.selected() {
+                let selected_path = selected.path.clone();
+                app.mode = AppMode::Confirm;
+                app.set_status(format!("Delete '{}'? (y/n)", selected.name));
+                // store delete command:
+                app.active_command = Some(Box::new(DeleteCommand::new_single(selected_path)));
             }
         }
         _ => {}
@@ -207,6 +220,34 @@ pub fn handle_key_event_input(key: KeyEvent, app: &mut App) -> Result<()> {
 
     Ok(())
 }
+
+pub fn handle_key_event_confirm(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        // confirm yes:
+        KeyCode::Char('y') | KeyCode::Char('Y') => {
+            // Execute the stored action:
+            if let Some(mut command) = app.active_command.take() {
+                if let Err(e) = command.execute(app) {
+                    app.set_error(format!("Command failed: {}", e));
+                }
+                app.set_status(format!("Executed Action: {}", command.description()));
+                app.mode = AppMode::Normal;
+            }
+        }
+
+        // confirm no:
+        KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+            app.set_status("Cancelled Action".to_string());
+            app.active_command = None; // clear stored command
+            app.mode = AppMode::Normal;
+        }
+
+        _ => {}
+    }
+
+    Ok(())
+}
+
 // !---------------------
 // ! Handle Mouse Events:
 // !---------------------
