@@ -459,8 +459,8 @@ pub static HELP_DIALOG: [&str; 43] = [
     "  N               New directory",
     "",
     "",
-    // Modes (not implemented yet):
-    "Modes: (not implemented yet)",
+    // Modes:
+    "Modes:",
     "  s               Multi-Select Mode",
     "  Space           Toggle selection in Multi-Select Mode",
     "  Esc, s          Exit Multi-Select Mode",
