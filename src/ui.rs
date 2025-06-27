@@ -392,7 +392,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-pub static HELP_DIALOG: [&str; 42] = [
+pub static HELP_DIALOG: [&str; 43] = [
     "Clexp Quick Help",
     // todo: "For more help, see documentation at XYZ"
     "",
@@ -408,8 +408,8 @@ pub static HELP_DIALOG: [&str; 42] = [
     "  C               Show clipboard (not implemented yet)",
     "",
     "",
-    // File operations (not done):
-    "File operations: (not implemented yet)",
+    // File operations:
+    "File operations:",
     "  r               Rename selected file/dir",
     "  d               Delete selected file(s)/dir(s)",
     "  x               Cut selected file(s)/dir(s)",
@@ -440,6 +440,7 @@ pub static HELP_DIALOG: [&str; 42] = [
     "  :q              Quit",
     "  :s <term>       Filter View",
     "  :h or :help     Show this help",
+    "",
     "",
     //todo allow user to create own commands? need to think about how to store commands between program instances
 ];
