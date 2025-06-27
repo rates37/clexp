@@ -1,7 +1,8 @@
 use crate::{
-    app::{App, AppMode, InputContext},
+    app::{App, AppMode, ClipboardOperation, InputContext},
     commands::{
-        Command, CreateFileCommand, RenameCommand, create::CreateDirCommand, delete::DeleteCommand,
+        Command, CopyCommand, CreateFileCommand, RenameCommand, create::CreateDirCommand,
+        delete::DeleteCommand,
     },
     ui::HELP_DIALOG,
 };
@@ -77,6 +78,7 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
         }
 
         // Quick actions:
+        // rename:
         KeyCode::Char('r') => {
             if let Some(selected) = app.file_list.selected() {
                 app.mode = AppMode::Input;
@@ -88,6 +90,7 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
             }
         }
 
+        // delete:
         KeyCode::Char('d') => {
             if let Some(selected) = app.file_list.selected() {
                 let selected_path = selected.path.clone();
@@ -95,6 +98,36 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
                 app.set_status(format!("Delete '{}'? (y/n)", selected.name));
                 // store delete command:
                 app.active_command = Some(Box::new(DeleteCommand::new_single(selected_path)));
+            }
+        }
+
+        // copy:
+        KeyCode::Char('c') => {
+            if let Some(selected) = app.file_list.selected() {
+                app.clipboard.items = vec![selected.path.clone()];
+                app.clipboard.operation = ClipboardOperation::Copy;
+                app.set_status("Copied to clipboard".to_string());
+            }
+        }
+
+        // paste:
+        KeyCode::Char('v') => {
+            if !app.clipboard.items.is_empty() {
+                let dest_path = app.current_path.clone();
+                let clipboard_items = app.clipboard.items.clone();
+                let op = app.clipboard.operation.clone();
+
+                // handle clipboard operation types:
+                match op {
+                    ClipboardOperation::Copy => {
+                        let mut copy_command = CopyCommand::new(clipboard_items, dest_path);
+                        if let Err(e) = copy_command.execute(app) {
+                            app.set_error(format!("Copy failed: {}", e));
+                        }
+                    }
+
+                    _ => {}
+                }
             }
         }
         _ => {}

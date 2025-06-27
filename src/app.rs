@@ -33,6 +33,7 @@ pub struct App {
 
     // Operation State:
     pub active_command: Option<Box<dyn Command>>,
+    pub clipboard: Clipboard,
 }
 
 impl App {
@@ -62,6 +63,7 @@ impl App {
 
             // Operation State:
             active_command: None,
+            clipboard: Clipboard::new(),
         };
 
         app.refresh_file_list()?;
@@ -352,4 +354,27 @@ pub enum InputContext {
     CreateDir,
     Filter,
     Command,
+}
+
+// Clipboard:
+#[derive(Debug, Clone, PartialEq)]
+pub enum ClipboardOperation {
+    None,
+    Copy,
+    Cut,
+}
+
+#[derive(Debug, Clone)]
+pub struct Clipboard {
+    pub items: Vec<PathBuf>,
+    pub operation: ClipboardOperation,
+}
+
+impl Clipboard {
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            operation: ClipboardOperation::None,
+        }
+    }
 }

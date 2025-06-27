@@ -23,3 +23,6 @@ pub use create::{CreateDirCommand, CreateFileCommand};
 
 pub mod delete;
 pub use delete::DeleteCommand;
+
+pub mod copy;
+pub use copy::CopyCommand;
