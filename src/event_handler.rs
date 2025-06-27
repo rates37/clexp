@@ -1,8 +1,8 @@
 use crate::{
     app::{App, AppMode, ClipboardOperation, InputContext},
     commands::{
-        Command, CopyCommand, CreateFileCommand, MoveCommand, RenameCommand,
-        create::CreateDirCommand, delete::DeleteCommand,
+        Command, CopyCommand, CreateDirCommand, CreateFileCommand, DeleteCommand, MoveCommand,
+        RenameCommand,
     },
     ui::HELP_DIALOG,
 };
@@ -19,6 +19,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
         AppMode::Help => handle_key_event_help(key, app),
         AppMode::Input => handle_key_event_input(key, app),
         AppMode::Confirm => handle_key_event_confirm(key, app),
+        AppMode::MultiSelect => handle_key_event_multi_select(key, app),
         // todo: implement other modes
         _ => Ok(()),
     }
@@ -50,6 +51,12 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
         // Clear messages:
         KeyCode::Esc => {
             app.clear_messages();
+        }
+
+        // Multi-select mode:
+        KeyCode::Char('s') => {
+            app.mode = AppMode::MultiSelect;
+            app.clear_multi_selection();
         }
 
         // Create new file:
@@ -307,10 +314,95 @@ pub fn handle_key_event_confirm(key: KeyEvent, app: &mut App) -> Result<()> {
     Ok(())
 }
 
+pub fn handle_key_event_multi_select(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        // Movement up/down
+        KeyCode::Down => {
+            app.file_list.next();
+        }
+        KeyCode::Up => {
+            app.file_list.prev();
+        }
+
+        // Navigating into/out of directories:
+        KeyCode::Left => {
+            app.clear_multi_selection();
+            app.navigate_up()?;
+        }
+        KeyCode::Right | KeyCode::Enter => {
+            app.clear_multi_selection();
+            app.enter_selected()?;
+        }
+
+        // Toggle selection for current item:
+        KeyCode::Char(' ') => {
+            if let Some(selected) = app.file_list.state.selected() {
+                if let Some(item) = app.file_list.items.get(selected) {
+                    if item.name != ".." {
+                        app.toggle_selection();
+                    }
+                }
+            }
+        }
+
+        // Delete selection:
+        KeyCode::Char('d') => {
+            let targets = app
+                .selected_items()
+                .iter()
+                .map(|f| f.path.clone())
+                .collect::<Vec<_>>();
+            if !targets.is_empty() {
+                app.mode = AppMode::Confirm;
+                app.set_status(format!("Delete {} selected item(s)? (y/n)", targets.len()));
+                app.active_command = Some(Box::new(DeleteCommand::new(targets)));
+            }
+        }
+
+        // Copy selection:
+        KeyCode::Char('c') => {
+            let targets = app
+                .selected_items()
+                .iter()
+                .map(|f| f.path.clone())
+                .collect::<Vec<_>>();
+            if !targets.is_empty() {
+                app.clipboard.items = targets;
+                app.clipboard.operation = ClipboardOperation::Copy;
+                app.set_status("Copied selected item(s)".to_string());
+            }
+        }
+
+        // Cut selection:
+        KeyCode::Char('x') => {
+            let targets = app
+                .selected_items()
+                .iter()
+                .map(|f| f.path.clone())
+                .collect::<Vec<_>>();
+            if !targets.is_empty() {
+                app.clipboard.items = targets;
+                app.clipboard.operation = ClipboardOperation::Cut;
+                app.set_status("Cut selected item(s)".to_string());
+            }
+        }
+
+        // Exit selection mode:
+        KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('s') => {
+            app.mode = AppMode::Normal;
+            app.clear_multi_selection();
+        }
+
+        _ => {}
+    }
+
+    Ok(())
+}
+
 // !---------------------
 // ! Handle Mouse Events:
 // !---------------------
-pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
+pub fn handle_mouse_event(_mouse: MouseEvent, _app: &mut App) -> Result<()> {
     // pass
 
     Ok(())

@@ -1,7 +1,5 @@
-use std::time::SystemTime;
-
 use chrono::{DateTime, Local};
-use ratatui::symbols::bar::THREE_EIGHTHS;
+use std::time::SystemTime;
 
 pub fn get_file_extension(filename: &str) -> Option<&str> {
     std::path::Path::new(filename)
@@ -23,16 +21,19 @@ pub fn get_file_icon(filename: &str, is_dir: bool) -> &'static str {
             "json" | "yaml" | "toml" | "xml" => "⚙️",
 
             // Code files:
-            "rs" | "py" | "c" | "cc" | "cpp" | "go" | "ts" | "js" | "tsx" | "jsx" | "m" | "java" | "h" | "hpp" => "💻",
+            "rs" | "py" | "c" | "cc" | "cpp" | "go" | "ts" | "js" | "tsx" | "jsx" | "m"
+            | "java" | "h" | "hpp" => "💻",
             "html" | "css" | "scss" | "sass" => "🌐",
             "sh" | "bash" | "zsh" | "bat" | "cmd" => "⚡️",
 
             // Images:
-            "jpg" | "png" | "jpeg" | "gif" | "bmp" | "svg" | "ico" | "tiff" | "heic" | "webp"  => "🌄",
+            "jpg" | "png" | "jpeg" | "gif" | "bmp" | "svg" | "ico" | "tiff" | "heic" | "webp" => {
+                "🌄"
+            }
 
             // Audio:
             "mp3" | "wav" | "ogg" | "aac" => "🎵",
-            
+
             // Video:
             "mp4" | "avi" | "mov" | "mkv" | "wmv" | "webm" | "flv" => "🎬",
 
@@ -40,7 +41,7 @@ pub fn get_file_icon(filename: &str, is_dir: bool) -> &'static str {
             "zip" | "tar" | "gz" | "7z" | "rar" => "📦",
 
             // Documents:
-            "doc"  | "docx" => "📘",
+            "doc" | "docx" => "📘",
             "pdf" => "📕",
             "xslx" | "xls" | "ods" | "csv" => "📗",
             "ppt" | "pptx" => "📙",
@@ -54,7 +55,6 @@ pub fn get_file_icon(filename: &str, is_dir: bool) -> &'static str {
     }
 }
 
-
 pub fn format_size(size: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
     const THRESHOLD: u64 = 1024;
@@ -66,8 +66,8 @@ pub fn format_size(size: u64) -> String {
     let mut size_f = size as f64;
     let mut unit_idx = 0;
 
-    while size_f >= (THRESHOLD as f64) && unit_idx < UNITS.len()-1 {
-        size_f /= (THRESHOLD as f64);
+    while size_f >= (THRESHOLD as f64) && unit_idx < UNITS.len() - 1 {
+        size_f /= THRESHOLD as f64;
         unit_idx += 1;
     }
 
@@ -76,7 +76,6 @@ pub fn format_size(size: u64) -> String {
     } else {
         format!("{:.1} {}", size_f, UNITS[unit_idx])
     }
-
 }
 
 pub fn truncate_string(s: &str, max_width: usize) -> String {
@@ -85,7 +84,7 @@ pub fn truncate_string(s: &str, max_width: usize) -> String {
     } else if max_width <= 3 {
         "...".to_string()
     } else {
-        format!("{}...", &s[..max_width-3])
+        format!("{}...", &s[..max_width - 3])
     }
 }
 

@@ -1,5 +1,3 @@
-use std::cmp::min;
-
 use crate::{
     app::{App, AppMode, InputContext},
     utils::{format_size, format_time, get_file_icon, truncate_string},
@@ -82,8 +80,6 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         .wrap(Wrap { trim: true });
     f.render_widget(path_paragraph, header_chunks[0]);
 
-    // todo: idea: highlight mode box with colours?
-    // for now leave default:
     let mode_style = match app.mode {
         AppMode::Normal => Style::default().fg(Color::Green),
         AppMode::Help => Style::default().fg(Color::Magenta),
@@ -127,7 +123,7 @@ fn draw_files_list(f: &mut Frame, area: Rect, app: &App) {
         .filtered_items()
         .iter()
         .enumerate()
-        .map(|(idx, item)| {
+        .map(|(_idx, item)| {
             let icon = get_file_icon(&item.name, item.is_dir);
             let size_text = if let Some(size) = item.size {
                 format_size(size)

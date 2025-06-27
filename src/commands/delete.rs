@@ -1,6 +1,5 @@
 use crate::app::App;
 use crate::commands::Command;
-use core::error;
 use std::path::PathBuf;
 
 #[derive(Debug)]

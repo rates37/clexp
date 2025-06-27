@@ -1,10 +1,8 @@
 use anyhow::Result;
-use color_eyre::owo_colors::colors::Magenta;
 use ratatui::widgets::ListState;
 use std::{
     fs::{self, DirEntry},
     path::PathBuf,
-    vec,
 };
 
 use crate::commands::Command;
@@ -213,6 +211,27 @@ impl App {
     pub fn insert_char_at_cursor(&mut self, c: char) {
         self.input_buffer.insert(self.cursor_position, c);
         self.cursor_position += 1;
+    }
+
+    pub fn clear_multi_selection(&mut self) {
+        self.selection.clear();
+    }
+
+    pub fn toggle_selection(&mut self) {
+        if let Some(selected) = self.file_list.state.selected() {
+            if let Some(pos) = self.selection.iter().position(|&i| i == selected) {
+                self.selection.remove(pos);
+            } else {
+                self.selection.push(selected);
+            }
+        }
+    }
+
+    pub fn selected_items(&self) -> Vec<&FileItem> {
+        self.selection
+            .iter()
+            .filter_map(|&i| self.file_list.items.get(i))
+            .collect()
     }
 }
 
