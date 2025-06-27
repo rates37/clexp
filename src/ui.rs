@@ -39,6 +39,9 @@ pub fn draw(f: &mut Frame, app: &App) {
         AppMode::Input => {
             draw_input_modal(f, app);
         }
+        AppMode::Confirm => {
+            draw_confirm_modal(f, app);
+        }
 
         _ => {}
     }
@@ -372,6 +375,46 @@ fn draw_input_modal(f: &mut Frame, app: &App) {
     f.render_widget(paragraph, area);
 }
 
+fn draw_confirm_modal(f: &mut Frame, app: &App) {
+    let area = centered_rect(50, 25, f.size());
+    f.render_widget(Clear, area);
+
+    let outer_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(ratatui::widgets::BorderType::Rounded)
+        .style(Style::default().fg(Color::Red));
+    f.render_widget(outer_block, area);
+
+    let inner_area = Rect {
+        x: area.x + 1,
+        y: area.y + 1,
+        width: area.width.saturating_sub(2),
+        height: area.height.saturating_sub(2),
+    };
+
+    let text = app.status_message.as_deref().unwrap_or("Confirm action?");
+    let disclaimer = "Press Y to confirm, N to cancel";
+    let text = format!("{}\n\n{}", text, disclaimer);
+
+    let paragraph = Paragraph::new(text)
+        .style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(ratatui::widgets::BorderType::Rounded)
+                .title(" Confirm ")
+                .padding(Padding {
+                    left: 1,
+                    right: 1,
+                    top: 0,
+                    bottom: 1,
+                }),
+        )
+        .alignment(ratatui::layout::Alignment::Center)
+        .wrap(Wrap { trim: true });
+    f.render_widget(paragraph, inner_area);
+}
+
 // UI-specific helper functions:
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
@@ -392,6 +435,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
+// Consts:
 pub static HELP_DIALOG: [&str; 43] = [
     "Clexp Quick Help",
     // todo: "For more help, see documentation at XYZ"

@@ -291,7 +291,11 @@ pub fn handle_key_event_confirm(key: KeyEvent, app: &mut App) -> Result<()> {
         }
 
         // confirm no:
-        KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+        KeyCode::Char('q')
+        | KeyCode::Char('Q')
+        | KeyCode::Char('n')
+        | KeyCode::Char('N')
+        | KeyCode::Esc => {
             app.set_status("Cancelled Action".to_string());
             app.active_command = None; // clear stored command
             app.mode = AppMode::Normal;
