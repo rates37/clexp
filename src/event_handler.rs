@@ -1,8 +1,8 @@
 use crate::{
     app::{App, AppMode, ClipboardOperation, InputContext},
     commands::{
-        Command, CopyCommand, CreateFileCommand, RenameCommand, create::CreateDirCommand,
-        delete::DeleteCommand,
+        Command, CopyCommand, CreateFileCommand, MoveCommand, RenameCommand,
+        create::CreateDirCommand, delete::DeleteCommand,
     },
     ui::HELP_DIALOG,
 };
@@ -101,6 +101,15 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
             }
         }
 
+        // cut:
+        KeyCode::Char('x') => {
+            if let Some(selected) = app.file_list.selected() {
+                app.clipboard.items = vec![selected.path.clone()];
+                app.clipboard.operation = ClipboardOperation::Cut;
+                app.set_status("Cut to clipboard".to_string());
+            }
+        }
+
         // copy:
         KeyCode::Char('c') => {
             if let Some(selected) = app.file_list.selected() {
@@ -119,11 +128,24 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
 
                 // handle clipboard operation types:
                 match op {
+                    // copys:
                     ClipboardOperation::Copy => {
                         let mut copy_command = CopyCommand::new(clipboard_items, dest_path);
                         if let Err(e) = copy_command.execute(app) {
                             app.set_error(format!("Copy failed: {}", e));
                         }
+                    }
+
+                    // cut:
+                    ClipboardOperation::Cut => {
+                        let mut move_command = MoveCommand::new(clipboard_items, dest_path);
+                        if let Err(e) = move_command.execute(app) {
+                            app.set_error(format!("Move failed: {}", e));
+                        }
+
+                        // clear clipboard after pasting a cut:
+                        app.clipboard.items.clear();
+                        app.clipboard.operation = ClipboardOperation::None;
                     }
 
                     _ => {}

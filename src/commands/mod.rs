@@ -26,3 +26,6 @@ pub use delete::DeleteCommand;
 
 pub mod copy;
 pub use copy::CopyCommand;
+
+pub mod move_cmd;
+pub use move_cmd::MoveCommand;
