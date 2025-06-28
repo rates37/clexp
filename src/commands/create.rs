@@ -17,14 +17,6 @@ impl CreateFileCommand {
             created: false,
         }
     }
-
-    pub fn new_with_content(path: PathBuf, content: String) -> Self {
-        Self {
-            path,
-            content,
-            created: false,
-        }
-    }
 }
 
 impl Command for CreateFileCommand {

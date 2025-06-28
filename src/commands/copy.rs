@@ -15,13 +15,6 @@ impl CopyCommand {
             destination,
         }
     }
-
-    pub fn new_single(source: PathBuf, destination: PathBuf) -> Self {
-        Self {
-            sources: vec![source],
-            destination,
-        }
-    }
 }
 
 impl Command for CopyCommand {

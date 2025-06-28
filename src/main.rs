@@ -8,7 +8,7 @@ use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event},
     execute,
     terminal::{
-        self, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
+        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
     },
 };
 use ratatui::{
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
     let tick_rate = Duration::from_millis(50);
-    let mut last_tick = Instant::now();
+    let last_tick = Instant::now();
 
     // Main app event loop:
     loop {
@@ -94,11 +94,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> 
                 }
                 _ => {}
             }
-        }
-
-        // periodic update for background tasks
-        if last_tick.elapsed() >= tick_rate {
-            // todo
         }
 
         if app.should_exit {
