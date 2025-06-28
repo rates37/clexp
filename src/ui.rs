@@ -1,5 +1,5 @@
 use crate::{
-    app::{App, AppMode, InputContext},
+    app::{App, AppMode, ClipboardOperation, InputContext},
     utils::{format_size, format_time, get_file_icon, truncate_string},
 };
 use ratatui::{
@@ -39,6 +39,10 @@ pub fn draw(f: &mut Frame, app: &App) {
         }
         AppMode::Confirm => {
             draw_confirm_modal(f, app);
+        }
+
+        AppMode::Clipboard => {
+            draw_clipboard_modal(f, app);
         }
 
         _ => {}
@@ -409,6 +413,53 @@ fn draw_confirm_modal(f: &mut Frame, app: &App) {
         .alignment(ratatui::layout::Alignment::Center)
         .wrap(Wrap { trim: true });
     f.render_widget(paragraph, inner_area);
+}
+
+fn draw_clipboard_modal(f: &mut Frame, app: &App) {
+    let area = centered_rect(60, 60, f.size());
+    f.render_widget(Clear, area);
+
+    // create lines to display to user:
+    let op = match app.clipboard.operation {
+        ClipboardOperation::Copy => "Copy",
+        ClipboardOperation::Cut => "Cut",
+        _ => "Clipboard",
+    };
+    let mut lines = vec![format!("Clipboard Operation: {}", op), "".to_string()];
+    if app.clipboard.items.is_empty() {
+        lines.push("Clipboard is empty".to_string()); // app should never reach this state 
+    } else {
+        lines.push("Items:".to_string());
+        for path in &app.clipboard.items {
+            lines.push(format!(" - {}", path.display()));
+        }
+    }
+
+    // display lines:
+    let height = area.height.saturating_sub(2) as usize;
+    let max_offset = if lines.len() > height {
+        lines.len() - height
+    } else {
+        0
+    };
+    let offset = app.clipboard_scroll_offset.min(max_offset);
+    let visible_lines = &lines[offset..lines.len().min(offset + height)];
+    let text = visible_lines.join("\n");
+    let paragraph = Paragraph::new(text)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(ratatui::widgets::BorderType::Rounded)
+                .title(" Clipboard ")
+                .padding(Padding {
+                    left: 1,
+                    right: 1,
+                    top: 1,
+                    bottom: 1,
+                }),
+        )
+        .wrap(Wrap { trim: true });
+    f.render_widget(paragraph, area);
 }
 
 // UI-specific helper functions:

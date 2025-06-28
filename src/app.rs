@@ -32,6 +32,7 @@ pub struct App {
     // Operation State:
     pub active_command: Option<Box<dyn Command>>,
     pub clipboard: Clipboard,
+    pub clipboard_scroll_offset: usize,
 }
 
 impl App {
@@ -62,6 +63,7 @@ impl App {
             // Operation State:
             active_command: None,
             clipboard: Clipboard::new(),
+            clipboard_scroll_offset: 0,
         };
 
         app.refresh_file_list()?;
@@ -232,6 +234,23 @@ impl App {
             .iter()
             .filter_map(|&i| self.file_list.items.get(i))
             .collect()
+    }
+
+    pub fn scroll_clipboard_down(&mut self, content_length: usize, viewport_height: usize) {
+        let max_scroll = if content_length > viewport_height {
+            content_length - viewport_height
+        } else {
+            0
+        };
+        if self.clipboard_scroll_offset < max_scroll {
+            self.clipboard_scroll_offset += 1;
+        }
+    }
+
+    pub fn scroll_clipboard_up(&mut self) {
+        if self.clipboard_scroll_offset > 0 {
+            self.clipboard_scroll_offset -= 1;
+        }
     }
 }
 

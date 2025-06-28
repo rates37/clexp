@@ -20,6 +20,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
         AppMode::Input => handle_key_event_input(key, app),
         AppMode::Confirm => handle_key_event_confirm(key, app),
         AppMode::MultiSelect => handle_key_event_multi_select(key, app),
+        AppMode::Clipboard => handle_key_event_clipboard(key, app),
         // todo: implement other modes
         _ => Ok(()),
     }
@@ -73,6 +74,16 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
             app.input_context = Some(InputContext::CreateDir);
             app.clear_input_buffer();
             app.set_status("Create new directory: ".to_string());
+        }
+
+        // View clipboard:
+        KeyCode::Char('C') => {
+            if !app.clipboard.items.is_empty() {
+                app.mode = AppMode::Clipboard;
+                app.clipboard_scroll_offset = 0;
+            } else {
+                app.set_status("Clipboard is empty!".to_string());
+            }
         }
 
         // Quit:
@@ -391,6 +402,32 @@ pub fn handle_key_event_multi_select(key: KeyEvent, app: &mut App) -> Result<()>
         KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('s') => {
             app.mode = AppMode::Normal;
             app.clear_multi_selection();
+        }
+
+        _ => {}
+    }
+
+    Ok(())
+}
+
+pub fn handle_key_event_clipboard(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.mode = AppMode::Normal; // todo: allow viewing clipboard from select mode as well
+        }
+
+        KeyCode::Down => {
+            let content_length = app.clipboard.items.len() + 2; // add lines for header
+
+            if let Ok((_, terminal_height)) = crossterm::terminal::size() {
+                let modal_height = (terminal_height as f32 * 0.6) as usize;
+                let viewport_height = modal_height.saturating_sub(2); // account for borders
+                app.scroll_clipboard_down(content_length, viewport_height);
+            }
+        }
+
+        KeyCode::Up => {
+            app.scroll_clipboard_up();
         }
 
         _ => {}
