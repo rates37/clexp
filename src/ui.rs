@@ -532,9 +532,9 @@ pub static HELP_DIALOG: [&str; 43] = [
     "",
     // Commands:
     "Command Mode:",
-    "  :q              Quit",
-    "  :s <term>       Filter View",
-    "  :h or :help     Show this help",
+    "  q              Quit",
+    "  s <term>       Filter View",
+    "  h or :help     Show this help",
     "",
     "",
     //todo allow user to create own commands? need to think about how to store commands between program instances
