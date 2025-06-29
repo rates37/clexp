@@ -45,6 +45,10 @@ pub fn draw(f: &mut Frame, app: &App) {
             draw_clipboard_modal(f, app);
         }
 
+        AppMode::Command => {
+            draw_input_modal(f, app);
+        }
+
         _ => {}
     }
 }
@@ -493,10 +497,10 @@ pub static HELP_DIALOG: [&str; 43] = [
     "  ←               Up one directory",
     "  →, Enter        Enter Directory/Open File",
     "  q, Ctrl+C       Quit",
-    "  /               Filter files",
-    "  :               Enter command",
+    "  :               Filter files",
+    "  /               Enter command",
     "  ?, :help        Show this help",
-    "  C               Show clipboard (not implemented yet)",
+    "  C               Show clipboard",
     "",
     "",
     // File operations:

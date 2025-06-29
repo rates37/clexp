@@ -21,8 +21,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<()> {
         AppMode::Confirm => handle_key_event_confirm(key, app),
         AppMode::MultiSelect => handle_key_event_multi_select(key, app),
         AppMode::Clipboard => handle_key_event_clipboard(key, app),
-        // todo: implement other modes
-        _ => Ok(()),
+        AppMode::Command => handle_key_event_command(key, app),
     }
 }
 
@@ -34,6 +33,14 @@ pub fn handle_key_event_normal(key: KeyEvent, app: &mut App) -> Result<()> {
         }
         KeyCode::Up => {
             app.file_list.prev();
+        }
+
+        // Command mode:
+        KeyCode::Char('/') => {
+            app.mode = AppMode::Command;
+            app.input_context = Some(InputContext::Command);
+            app.input_buffer.clear();
+            app.cursor_position = 0;
         }
 
         // Navigating into/out of directories:
@@ -428,6 +435,57 @@ pub fn handle_key_event_clipboard(key: KeyEvent, app: &mut App) -> Result<()> {
 
         KeyCode::Up => {
             app.scroll_clipboard_up();
+        }
+
+        _ => {}
+    }
+
+    Ok(())
+}
+
+pub fn handle_key_event_command(key: KeyEvent, app: &mut App) -> Result<()> {
+    match key.code {
+        KeyCode::Enter => {
+            let command = app.input_buffer.chars().collect::<String>();
+            if command.trim() == "help" {
+                app.mode = AppMode::Help;
+                app.clear_input_buffer();
+                return Ok(());
+            }
+            app.clear_input_buffer();
+            app.execute_command(&command)?;
+        }
+
+        // Exit the command view:
+        KeyCode::Esc => {
+            app.mode = AppMode::Normal;
+            app.clear_input_buffer();
+        }
+
+        // Cursor movement:
+        KeyCode::Left => {
+            app.move_cursor_left();
+        }
+        KeyCode::Right => {
+            app.move_cursor_right();
+        }
+        KeyCode::Up | KeyCode::Home => {
+            app.move_cursor_home();
+        }
+        KeyCode::Down | KeyCode::End => {
+            app.move_cursor_end();
+        }
+
+        // Text editing:
+        KeyCode::Backspace => {
+            app.delete_char_before_cursor();
+        }
+        KeyCode::Delete => {
+            app.delete_char_at_cursor();
+        }
+        // Text input:
+        KeyCode::Char(c) => {
+            app.insert_char_at_cursor(c);
         }
 
         _ => {}

@@ -252,6 +252,31 @@ impl App {
             self.clipboard_scroll_offset -= 1;
         }
     }
+
+    pub fn execute_command(&mut self, command: &str) -> Result<()> {
+        let parts: Vec<&str> = command.trim_end().split_whitespace().collect();
+        if parts.is_empty() {
+            return Ok(());
+        }
+
+        let command = parts[0].trim().to_lowercase();
+        match command.as_str() {
+            "q" | "quit" | "exit" => {
+                self.should_exit = true;
+            }
+
+            "h" | "help" => {
+                self.mode = AppMode::Help;
+                self.clear_input_buffer();
+            }
+
+            _ => {
+                self.error_message = Some(format!("Unknown command: {}", parts[0]));
+                self.mode = AppMode::Normal;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
