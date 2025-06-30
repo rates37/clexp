@@ -178,13 +178,13 @@ fn draw_files_list(f: &mut Frame, area: Rect, app: &App) {
 
             let mut style = if item.is_dir {
                 Style::default()
-                    .fg(Color::Blue)
+                    .fg(Color::LightCyan)
                     .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
             if multi_select_mode && is_selected {
-                style = style.bg(Color::Yellow).fg(Color::Black);
+                style = style.bg(Color::LightYellow).fg(Color::Black);
             }
             ListItem::new(Line::from(Span::styled(content, style)))
         })
@@ -291,7 +291,7 @@ fn draw_status_bar(f: &mut Frame, area: Rect, app: &App) {
     let status_style = if app.error_message.is_some() {
         Style::default().fg(Color::Red)
     } else {
-        Style::default().fg(Color::Blue)
+        Style::default().fg(Color::Cyan)
     };
     let status_paragraph = Paragraph::new(status_text).style(status_style).block(
         Block::default()
