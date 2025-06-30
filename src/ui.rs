@@ -301,12 +301,12 @@ fn draw_status_bar(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(status_paragraph, status_bar_chunks[0]);
 
     // right side = usage hints
-    let hints = "q:quit  /:search ::run cmd";
+    let hints = "q:quit  ?:help /:run cmd";
     // todo: show different hints based on app mode
     let hints_style = Style::default().fg(Color::White);
     let hints_paragraph = Paragraph::new(hints)
         .style(hints_style)
-        .alignment(ratatui::layout::Alignment::Right)
+        .alignment(ratatui::layout::Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
