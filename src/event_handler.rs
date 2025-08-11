@@ -424,7 +424,7 @@ pub fn handle_key_event_clipboard(key: KeyEvent, app: &mut App) -> Result<()> {
         }
 
         KeyCode::Down => {
-            let content_length = app.clipboard.items.len() + 2; // add lines for header
+            let content_length = app.clipboard.items.len() + 3; // add lines for header
 
             if let Ok((_, terminal_height)) = crossterm::terminal::size() {
                 let modal_height = (terminal_height as f32 * 0.6) as usize;
@@ -525,6 +525,15 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
                     }
                 }
 
+                AppMode::Clipboard => {
+                    let content_length = app.clipboard.items.len() + 4; // account for header lines
+                    if let Ok((_, terminal_height)) = crossterm::terminal::size() {
+                        let modal_height = (terminal_height as f32 * 0.6) as usize; // clipboard is 60% of terminal height
+                        let viewport_height = modal_height.saturating_sub(6) ;  // account for borders
+                        app.scroll_clipboard_down(content_length, viewport_height);
+                    }
+                }
+
                 // todo: the rest
                 _ => {
                     app.file_list.prev();
@@ -536,6 +545,10 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
             match app.mode {
                 AppMode::Help => {
                     app.scroll_help_up();
+                }
+
+                AppMode::Clipboard => {
+                    app.scroll_clipboard_up();
                 }
 
                 // todo: the rest
