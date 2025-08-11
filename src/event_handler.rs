@@ -520,13 +520,15 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
                     let content_length = 43;
                     if let Ok((_, terminal_height)) = crossterm::terminal::size() {
                         let modal_height = (terminal_height as f32 * 0.8) as usize;
-                        let viewport_height = modal_height.saturating_sub(2);  // account for borders
+                        let viewport_height = modal_height.saturating_sub(2); // account for borders
                         app.scroll_help_down(content_length, viewport_height);
                     }
                 }
 
                 // todo: the rest
-                _ => {}
+                _ => {
+                    app.file_list.prev();
+                }
             }
         }
 
@@ -537,7 +539,9 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
                 }
 
                 // todo: the rest
-                _ => {}
+                _ => {
+                    app.file_list.next();
+                }
             }
         }
         // todo: the rest
