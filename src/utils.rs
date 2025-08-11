@@ -1,6 +1,8 @@
 use chrono::{DateTime, Local};
 use std::time::SystemTime;
 
+pub static DOUBLE_CLICK_DURATION: u128 = 400;
+
 pub fn get_file_extension(filename: &str) -> Option<&str> {
     std::path::Path::new(filename)
         .extension()

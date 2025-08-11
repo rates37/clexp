@@ -36,6 +36,8 @@ pub struct App {
 
     // Mouse control features:
     pub last_scroll_time: Option<std::time::Instant>,
+    pub last_click_time: Option<std::time::Instant>,
+    pub last_click_index: Option<usize>,
 }
 
 impl App {
@@ -70,6 +72,8 @@ impl App {
 
             // Mouse control features:
             last_scroll_time: None,
+            last_click_time: None,
+            last_click_index: None,
         };
 
         app.refresh_file_list()?;

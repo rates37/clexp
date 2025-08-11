@@ -1,3 +1,4 @@
+use crate::utils::DOUBLE_CLICK_DURATION;
 use crate::{
     app::{App, AppMode, ClipboardOperation, InputContext},
     commands::{
@@ -517,7 +518,7 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
         MouseEventKind::ScrollDown => {
             match app.mode {
                 AppMode::Help => {
-                    let content_length = 43;
+                    let content_length = HELP_DIALOG.len();
                     if let Ok((_, terminal_height)) = crossterm::terminal::size() {
                         let modal_height = (terminal_height as f32 * 0.8) as usize;
                         let viewport_height = modal_height.saturating_sub(2); // account for borders
@@ -556,6 +557,38 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
             }
             return Ok(());
         }
+
+        MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
+            let y = mouse.row.saturating_sub(4) as usize;
+            if y < app.file_list.filtered_items.len() {
+                let idx = app.file_list.filtered_items[y];
+
+                // Double click detection:
+                let double_click = app.last_click_index == Some(idx)
+                    && app.last_click_time.map_or(false, |t| {
+                        now.duration_since(t).as_millis() < DOUBLE_CLICK_DURATION
+                    });
+
+                if double_click {
+                    if let Some(item) = app.file_list.items.get(idx) {
+                        if item.name == ".." {
+                            app.navigate_up()?;
+                        } else if item.is_dir {
+                            app.enter_selected()?;
+                        }
+                    }
+                    // reset click fsm after double-click action
+                    app.last_click_time = None;
+                    app.last_click_index = None;
+                } else {
+                    app.file_list.state.select(Some(idx));
+                    app.last_click_index = Some(idx);
+                    app.last_click_time = Some(now);
+                }
+            }
+        }
+
+        // MouseEventKind::Up()
         _ => {}
     }
 
