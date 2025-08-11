@@ -588,7 +588,24 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
             }
         }
 
-        // MouseEventKind::Up()
+        MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
+            let y = mouse.row.saturating_sub(4) as usize;
+            if y >= app.file_list.filtered_items.len() {
+                return Ok(());
+            }
+
+            let idx = app.file_list.filtered_items[y];
+            if app.file_list.state.selected() != Some(idx) || app.mode != AppMode::MultiSelect {
+                return Ok(());
+            }
+
+            if let Some(item) = app.file_list.items.get(idx) {
+                if item.name != ".." {
+                    app.toggle_selection();
+                }
+            }
+        }
+
         _ => {}
     }
 
