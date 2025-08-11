@@ -33,6 +33,9 @@ pub struct App {
     pub active_command: Option<Box<dyn Command>>,
     pub clipboard: Clipboard,
     pub clipboard_scroll_offset: usize,
+
+    // Mouse control features:
+    pub last_scroll_time: Option<std::time::Instant>,
 }
 
 impl App {
@@ -64,6 +67,9 @@ impl App {
             active_command: None,
             clipboard: Clipboard::new(),
             clipboard_scroll_offset: 0,
+
+            // Mouse control features:
+            last_scroll_time: None
         };
 
         app.refresh_file_list()?;

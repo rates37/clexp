@@ -78,9 +78,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> 
         if crossterm::event::poll(timeout)? {
             match event::read()? {
                 Event::Key(key_event) => {
-                    // only handle press events:
                     if key_event.kind == crossterm::event::KeyEventKind::Press {
-                        // todo: process event through event handler
                         if let Err(e) = handle_key_event(key_event, app) {
                             app.set_error(format!("Key Event Error: {}", e));
                         }

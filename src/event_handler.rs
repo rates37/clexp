@@ -7,7 +7,7 @@ use crate::{
     ui::HELP_DIALOG,
 };
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 
 // !---------------------
 // !  Handle Key Events:
@@ -497,8 +497,52 @@ pub fn handle_key_event_command(key: KeyEvent, app: &mut App) -> Result<()> {
 // !---------------------
 // ! Handle Mouse Events:
 // !---------------------
-pub fn handle_mouse_event(_mouse: MouseEvent, _app: &mut App) -> Result<()> {
-    // pass
+pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
+    let debounce_ms = 15;
+    let now = std::time::Instant::now();
+    match mouse.kind {
+        MouseEventKind::ScrollDown | MouseEventKind::ScrollUp => {
+            if let Some(last) = app.last_scroll_time {
+                if now.duration_since(last).as_millis() < debounce_ms {
+                    return Ok(());
+                }
+            }
+            app.last_scroll_time = Some(now);
+        }
+        _ => {}
+    }
+
+    // handle scroll events based on the current app mode:
+    match mouse.kind {
+        MouseEventKind::ScrollDown => {
+            match app.mode {
+                AppMode::Help => {
+                    let content_length = 43;
+                    if let Ok((_, terminal_height)) = crossterm::terminal::size() {
+                        let modal_height = (terminal_height as f32 * 0.8) as usize;
+                        let viewport_height = modal_height.saturating_sub(2);  // account for borders
+                        app.scroll_help_down(content_length, viewport_height);
+                    }
+                }
+
+                // todo: the rest
+                _ => {}
+            }
+        }
+
+        MouseEventKind::ScrollUp => {
+            match app.mode {
+                AppMode::Help => {
+                    app.scroll_help_up();
+                }
+
+                // todo: the rest
+                _ => {}
+            }
+        }
+        // todo: the rest
+        _ => {}
+    }
 
     Ok(())
 }
