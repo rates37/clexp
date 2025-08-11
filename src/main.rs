@@ -7,9 +7,7 @@ use anyhow::Result;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event},
     execute,
-    terminal::{
-        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
-    },
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{
     Terminal,
@@ -17,10 +15,10 @@ use ratatui::{
 };
 
 mod app;
-mod ui;
-mod event_handler;
-mod utils;
 mod commands;
+mod event_handler;
+mod ui;
+mod utils;
 
 use app::App;
 

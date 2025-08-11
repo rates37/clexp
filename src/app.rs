@@ -69,7 +69,7 @@ impl App {
             clipboard_scroll_offset: 0,
 
             // Mouse control features:
-            last_scroll_time: None
+            last_scroll_time: None,
         };
 
         app.refresh_file_list()?;

@@ -529,12 +529,11 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
                     let content_length = app.clipboard.items.len() + 4; // account for header lines
                     if let Ok((_, terminal_height)) = crossterm::terminal::size() {
                         let modal_height = (terminal_height as f32 * 0.6) as usize; // clipboard is 60% of terminal height
-                        let viewport_height = modal_height.saturating_sub(6) ;  // account for borders
+                        let viewport_height = modal_height.saturating_sub(6); // account for borders
                         app.scroll_clipboard_down(content_length, viewport_height);
                     }
                 }
 
-                // todo: the rest
                 _ => {
                     app.file_list.prev();
                 }
@@ -551,13 +550,12 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
                     app.scroll_clipboard_up();
                 }
 
-                // todo: the rest
                 _ => {
                     app.file_list.next();
                 }
             }
+            return Ok(());
         }
-        // todo: the rest
         _ => {}
     }
 
